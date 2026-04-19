@@ -8,18 +8,19 @@
 
 ### One-line pitch
 
-An Ara-powered academic operations agent that watches the tools a grad student already uses and proactively turns activity, deadlines, papers, and tasks into concrete weekly outputs.
+An Ara-powered academic operations webapp that watches the tools a grad student already uses and proactively turns activity, deadlines, papers, and tasks into concrete weekly outputs.
 
 ### Product thesis
 
 Most "student assistants" stop at summarization. Grad students actually need a system that notices work happening across coding, writing, planning, scheduling, and reading, then takes follow-through actions on their behalf.
 
-This project uses Ara as the persistent agent runtime that:
+This project uses Ara as the persistent agent runtime behind a functional webapp that:
 
 - monitors multiple academic signals
 - synthesizes them into useful updates
 - writes to external tools
 - nudges the user before something slips
+- exposes results through a dashboard the user can actually operate
 
 The goal is to make graduate research feel coordinated rather than fragmented.
 
@@ -64,13 +65,14 @@ A Johns Hopkins grad student working on the pitch tipping project who codes duri
 - Reduce academic coordination overhead by automating weekly upkeep.
 - Surface the most important upcoming obligations before they become urgent.
 - Turn scattered work signals into deliverables a student would have written manually.
-- Demonstrate Ara as a real execution agent, not just a chat interface.
+- Demonstrate Ara as a real execution agent inside a polished, functional webapp.
 
 ### Success criteria for the hackathon
 
 - At least 3 end-to-end automations work reliably in demo.
 - The agent writes to at least 2 external systems.
 - The agent proactively sends at least 1 outbound reminder/update.
+- The webapp shows workflow outputs and supports manual workflow triggers.
 - Judges can understand the value in under 30 seconds.
 
 ### Non-goals
@@ -90,6 +92,33 @@ By the end of each week, the user should feel:
 - "My week plan feels prioritized, not random."
 
 ## 6. Core Features
+
+## Feature 0: Functional Web Dashboard
+
+### User value
+
+The student can see what the agent has done, what is pending, and what to run next without relying on a terminal or hidden backend logs.
+
+### Core UI surfaces
+
+- Home dashboard
+- Advisor update card
+- Research log card
+- Paper scout card
+- Deadline alerts card
+- Weekly plan card
+- Settings/config section
+
+### Core behavior
+
+- Display latest outputs from each workflow
+- Allow manual "run now" action for each workflow
+- Show connected integration status
+- Surface recent generated artifacts such as email drafts, plans, and paper recommendations
+
+### Demoable output
+
+A dashboard that visibly updates after a workflow run and makes the product feel like a complete tool, not just a backend automation.
 
 ## Feature A: WakaTime to Research Log
 
@@ -274,6 +303,8 @@ Ara is the right runtime because the product requires:
 
 Ara should be the orchestration and reasoning layer, not the source of truth for every external tool.
 
+Ara should also not be the entire product surface. The user-facing product should be a webapp that calls into the Ara-backed workflow layer.
+
 ### Verified Ara capabilities relevant here
 
 - `ara.Automation(...)` for long-running agents and scheduled deployments
@@ -302,15 +333,52 @@ For the hackathon, the safest implementation is:
 
 ## High-level flow
 
-1. External tools are polled on a schedule.
-2. Ara calls custom tools to fetch fresh state.
-3. Ara normalizes data into a shared internal model.
-4. Ara compares new state against prior memory to prevent duplicate or noisy outputs.
-5. Ara writes the resulting artifact or message to the appropriate destination.
+1. The webapp UI displays current status, outputs, and run controls.
+2. The backend API receives UI actions or scheduled triggers.
+3. External tools are polled on a schedule or on-demand.
+4. Ara calls custom tools to fetch fresh state.
+5. Ara normalizes data into a shared internal model.
+6. Ara compares new state against prior memory to prevent duplicate or noisy outputs.
+7. Ara writes the resulting artifact or message to the appropriate destination.
+8. The backend returns workflow outputs to the UI for display.
 
 ## Components
 
-### A. Ara automation runtime
+### A. Web frontend
+
+Responsibilities:
+
+- show workflow results and system state
+- provide manual run controls
+- display generated artifacts in a judge-friendly way
+- expose settings for keywords, project name, and destinations
+
+Suggested surfaces:
+
+- dashboard
+- workflow detail cards
+- settings page or panel
+- activity/history feed
+
+### B. Backend API layer
+
+Responsibilities:
+
+- serve frontend requests
+- trigger workflow runs
+- read and return saved workflow outputs
+- provide a stable interface between UI and Ara-backed logic
+
+Example endpoints:
+
+- `GET /api/dashboard`
+- `POST /api/workflows/advisor-update/run`
+- `POST /api/workflows/paper-scout/run`
+- `POST /api/workflows/deadline-guardian/run`
+- `POST /api/workflows/week-planner/run`
+- `GET /api/history`
+
+### C. Ara automation runtime
 
 Responsibilities:
 
@@ -320,7 +388,7 @@ Responsibilities:
 - generate summaries, plans, and drafts
 - maintain persistent memory files
 
-### B. Integration tool layer
+### D. Integration tool layer
 
 Custom tools we implement as Python functions:
 
@@ -334,7 +402,7 @@ Custom tools we implement as Python functions:
 - `send_nudge_message`
 - `update_reading_list`
 
-### C. Memory/state layer
+### E. Memory/state layer
 
 Stored locally in Ara workspace as JSON or markdown:
 
@@ -346,7 +414,7 @@ Stored locally in Ara workspace as JSON or markdown:
 
 These files prevent duplicate alerts and preserve continuity.
 
-### D. Delivery layer
+### F. Delivery layer
 
 Primary:
 
@@ -409,6 +477,16 @@ Secondary:
 - `recommended_blocks`
 - `sent_at`
 
+### DashboardSnapshot
+
+- `generated_at`
+- `research_log_summary`
+- `advisor_update_status`
+- `paper_scout_summary`
+- `deadline_alert_summary`
+- `weekly_plan_summary`
+- `recent_artifacts`
+
 ## 10. User Stories
 
 - As a grad student, I want my coding time logged automatically so I do not lose track of my weekly research effort.
@@ -421,6 +499,9 @@ Secondary:
 
 ### Must-have for hackathon demo
 
+- functional web dashboard
+- manual run buttons for each workflow
+- workflow result cards in UI
 - WakaTime summary fetch
 - GitHub weekly commit fetch
 - advisor update draft generation
@@ -433,7 +514,7 @@ Secondary:
 ### Nice-to-have
 
 - Notion integration and Google Drive integration both supported
-- user-configurable keyword editing UI
+- richer settings/config UI
 - conversation interface for "what changed this week?"
 - confidence scoring on paper recommendations
 
@@ -447,6 +528,8 @@ Secondary:
 ## 12. Functional Requirements
 
 - The system must run scheduled workflows without manual prompting.
+- The system must expose a web UI that can manually trigger workflows.
+- The system must display the latest workflow outputs in the UI.
 - The system must store enough local state to avoid duplicate alerts and duplicate paper recommendations.
 - The system must draft, not auto-send, advisor emails by default.
 - The system must send a deadline nudge exactly once per configured threshold.
@@ -458,9 +541,47 @@ Secondary:
 - The demo path must complete within 10-20 seconds for a single run.
 - Failures in one integration should not block unrelated workflows.
 - Outputs should be legible and concise enough for real use.
+- The UI should load quickly and work on laptop-sized demo screens.
 - Secrets must live in environment variables or Ara secret storage, not committed files.
 
-## 14. Risks and Mitigations
+## 14. UI Requirements
+
+### Primary screens
+
+- `Dashboard`
+- `Workflow details`
+- `Settings / integrations`
+
+### Dashboard requirements
+
+- show 5 workflow cards
+- show latest run timestamp per workflow
+- show latest output summary per workflow
+- include one-click manual run controls
+
+### Workflow card requirements
+
+Each card should show:
+
+- status
+- latest summary
+- primary artifact preview
+- manual run button
+
+### Settings requirements
+
+- editable research keywords
+- project/repo name
+- preferred delivery channel
+- selected writing destination
+
+### Design requirements
+
+- polished and presentable enough for a hackathon demo
+- clear visual grouping
+- not just raw JSON output
+- usable on standard laptop width
+## 15. Risks and Mitigations
 
 ## Risk: too many integrations for one hackathon
 
@@ -491,7 +612,14 @@ Mitigation:
 - include commit metadata, completed tasks, and current blockers
 - store prior update examples so tone can improve over time
 
-## 15. Demo Narrative
+## Risk: backend works but UI feels unfinished
+
+Mitigation:
+
+- assign one person full ownership of frontend
+- keep the UI focused on dashboard + cards + manual runs
+- render workflow outputs as polished summaries, not raw logs
+## 16. Demo Narrative
 
 ### Demo goal
 
@@ -499,29 +627,32 @@ Show that the agent does real academic upkeep across tools with minimal user pro
 
 ### Suggested 2-3 minute demo
 
-1. Seed or connect real WakaTime, GitHub, Calendar, and Todoist data.
-2. Run the Friday update workflow.
-3. Show:
+1. Open the web dashboard and explain the 5 workflow cards.
+2. Seed or connect real WakaTime, GitHub, Calendar, and Todoist data.
+3. Run the Friday update workflow.
+4. Show:
    - fetched coding hours
    - summarized commits
    - drafted advisor email
-4. Run the paper scout workflow.
-5. Show:
+5. Run the paper scout workflow.
+6. Show:
    - top 3 papers
    - reading list update
-6. Run deadline guardian or week planner.
-7. Show:
+7. Run deadline guardian or week planner.
+8. Show:
    - outbound reminder or weekly plan message
+   - reflected UI status and artifact previews
 
 ### Judge takeaway
 
-"This is not a chatbot. It is a grad school operations layer that keeps your academic life in sync."
-
-## 16. Implementation Plan
+"This is not a chatbot. It is a grad school operations webapp that keeps your academic life in sync."
+## 17. Implementation Plan
 
 ## Phase 1: Foundation
 
 - set up Ara app structure
+- set up frontend app shell
+- set up backend API shell
 - define tool interfaces
 - create state files and schemas
 - define schedule map
@@ -545,21 +676,26 @@ Show that the agent does real academic upkeep across tools with minimal user pro
 - improve prompt templates
 - add sample data seeding
 - add one command to run all demo workflows
-- add a minimal status dashboard if time remains
+- polish dashboard cards and workflow states
 
-## 17. Suggested Workflow Schedule
+## 18. Suggested Workflow Schedule
 
 - Daily at 8 PM: WakaTime research log sync
 - Friday at 3 PM: advisor update draft
 - Saturday morning: arXiv paper scout
 - Daily at 9 AM: deadline scan with 48-hour warning logic
 - Sunday at 6 PM: weekly plan generation
-
-## 18. Proposed File Structure
+## 19. Proposed File Structure
 
 ```text
 ara-hackathon/
   app.py
+  frontend/
+    src/
+    public/
+  backend/
+    api/
+    services/
   docs/
     prd-grad-student-survival-agent.md
   src/
@@ -583,24 +719,22 @@ ara-hackathon/
   data/
     .gitkeep
 ```
+## 20. Acceptance Criteria
 
-## 19. Acceptance Criteria
-
+- The app has a functional web UI with workflow cards and manual triggers.
 - A research log can be generated from WakaTime data and written to one destination.
 - A Friday advisor update can be drafted from GitHub and WakaTime data.
 - A weekly paper scout can produce 3 non-duplicate relevant papers.
 - A 48-hour deadline reminder can be generated from Calendar events.
 - A weekly Todoist-based plan can be delivered to the user.
 - The app can demonstrate at least one outbound message channel through Ara.
-
-## 20. Open Decisions
+## 21. Open Decisions
 
 - Primary write-back target: Notion or Google Drive?
 - Primary nudge channel: Telegram or WhatsApp?
 - Real auth for all integrations or partial mock data for demo resilience?
 - Single-project only for MVP or multiple projects later?
-
-## 21. Recommendation for the Hackathon
+## 22. Recommendation for the Hackathon
 
 To maximize reliability and still look impressive:
 
@@ -608,5 +742,6 @@ To maximize reliability and still look impressive:
 - use Telegram as the main nudge channel unless WhatsApp is confirmed in Ara
 - use either Notion or Drive, not both, for MVP
 - keep arXiv discovery real, but cache results locally for demo stability
+- keep the UI focused on one polished dashboard rather than many screens
 
 This yields a product that feels rich and cross-tool without taking on too much integration risk in one day.

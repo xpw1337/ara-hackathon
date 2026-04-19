@@ -10,9 +10,15 @@ Split the project into 3 parallel workstreams that can be built independently by
 
 The split below is designed to minimize merge conflicts and let each person finish a meaningful end-to-end slice of the product.
 
+This version assumes the final deliverable is a functional webapp, not just backend automations.
+
 ## Product recap
 
-The `Grad Student Survival Agent` has five core automations:
+The `Grad Student Survival Agent` has:
+
+- a functional web UI
+- a backend/API layer
+- five core automations
 
 - WakaTime to weekly research log
 - GitHub commit tracking to Friday advisor update draft
@@ -22,21 +28,22 @@ The `Grad Student Survival Agent` has five core automations:
 
 To keep the build practical, we are grouping these into 3 independent lanes:
 
-- `Progress Lane`
-- `Planning Lane`
-- `Research Lane`
+- `Core Backend + Progress Lane`
+- `Frontend Webapp Lane`
+- `Planning + Research Lane`
 
 ## Team split
 
-## 1. Arijit: Core Runtime + Progress Lane
+## 1. Arijit: Core Backend + Progress Lane
 
 ### Ownership
 
-Arijit owns the Ara app skeleton and the work-progress automation flow.
+Arijit owns the Ara app skeleton, backend orchestration, and the work-progress automation flow.
 
 ### Main features
 
 - Ara runtime entrypoint and scheduling skeleton
+- backend API skeleton
 - WakaTime activity fetch
 - GitHub weekly commit fetch
 - Friday advisor update generation
@@ -45,6 +52,7 @@ Arijit owns the Ara app skeleton and the work-progress automation flow.
 ### Deliverables
 
 - `app.py` updated to reflect the real Grad Student Survival Agent
+- backend API endpoints for workflow triggering and dashboard data
 - progress workflow that can:
   - fetch WakaTime activity
   - fetch project commits
@@ -55,6 +63,8 @@ Arijit owns the Ara app skeleton and the work-progress automation flow.
 ### Suggested file ownership
 
 - `app.py`
+- `backend/api/`
+- `backend/services/`
 - `src/integrations/wakatime.py`
 - `src/integrations/github_client.py`
 - `src/integrations/gmail_client.py`
@@ -66,16 +76,57 @@ Arijit owns the Ara app skeleton and the work-progress automation flow.
 - Manual run can produce a weekly progress summary
 - Manual run can create a Gmail draft or mocked draft output
 - WakaTime and GitHub data are normalized into a common structure
+- Frontend has stable API endpoints to call for workflow actions
 
 ### Notes
 
-Arijit is the best owner for this lane because it includes the highest-risk core flow and touches the top-level Ara orchestration.
+Arijit is the best owner for this lane because it includes the highest-risk backend flow and touches the top-level Ara orchestration.
 
-## 2. Archit: Planning Lane
+## 2. Archit: Frontend Webapp Lane
 
 ### Ownership
 
-Archit owns the planning and reminder automations.
+Archit owns the user-facing webapp.
+
+### Main features
+
+- dashboard UI
+- workflow cards and result panels
+- manual run controls
+- settings/config UI
+- frontend integration with backend API
+
+### Deliverables
+
+- responsive frontend that:
+  - shows all major workflows
+  - displays latest outputs
+  - lets the user trigger runs manually
+  - exposes configuration inputs for keywords and preferences
+
+### Suggested file ownership
+
+- `frontend/`
+- frontend routing/pages/components
+- dashboard cards
+- API client layer
+
+### Done criteria
+
+- The app opens into a polished dashboard
+- The UI can display outputs from all workflows
+- The UI can trigger workflow runs through the backend
+- The UI is clean and demoable on a laptop
+
+### Notes
+
+This lane is critical because the final deliverable is a real webapp, and one person needs full ownership of the UI experience.
+
+## 3. Harsh: Planning + Research Lane
+
+### Ownership
+
+Harsh owns the planning and research automations.
 
 ### Main features
 
@@ -83,46 +134,12 @@ Archit owns the planning and reminder automations.
 - 48-hour reminder logic
 - Todoist task fetch
 - Sunday week planner
-- outbound nudge channel abstraction
-
-### Deliverables
-
-- deadline guardian workflow
-- weekly planning workflow
-- message delivery layer for reminders and week plans
-
-### Suggested file ownership
-
-- `src/integrations/calendar_client.py`
-- `src/integrations/todoist_client.py`
-- `src/integrations/delivery.py`
-- `src/workflows/deadline_guardian.py`
-- `src/workflows/week_planner.py`
-
-### Done criteria
-
-- Calendar events can be filtered into "needs reminder" vs "ignore"
-- Todoist tasks can be ranked into a weekly plan
-- Reminder delivery works through one reliable channel
-- If WhatsApp is unavailable, Telegram fallback is supported
-
-### Notes
-
-This lane is highly demoable and mostly independent from the advisor-update workflow.
-
-## 3. Harsh: Research Lane + Reading List
-
-### Ownership
-
-Harsh owns the paper discovery and reading-list automation flow.
-
-### Main features
-
 - arXiv search and ranking
 - keyword-based paper filtering
 - duplicate-paper prevention
 - reading list update target
 - optional research digest output
+- outbound reminder/message abstraction
 
 ### Deliverables
 
@@ -131,11 +148,20 @@ Harsh owns the paper discovery and reading-list automation flow.
   - ranks top results
   - avoids repeats
   - updates a reading list
+- planning workflows that:
+  - detect deadline risks
+  - generate weekly plans
+  - send reminders
 
 ### Suggested file ownership
 
+- `src/integrations/calendar_client.py`
+- `src/integrations/todoist_client.py`
+- `src/integrations/delivery.py`
 - `src/integrations/research_sources.py`
 - `src/integrations/reading_list_writer.py`
+- `src/workflows/deadline_guardian.py`
+- `src/workflows/week_planner.py`
 - `src/workflows/paper_scout.py`
 - `src/state/papers_seen.py`
 
@@ -143,6 +169,9 @@ Harsh owns the paper discovery and reading-list automation flow.
 
 - A weekly run can produce top 3 papers from user keywords
 - Already-seen papers are filtered out
+- Calendar events can be filtered into "needs reminder" vs "ignore"
+- Todoist tasks can be ranked into a weekly plan
+- Reminder delivery works through one reliable channel
 - A reading list can be updated in one destination:
   - Notion
   - Google Drive
@@ -150,7 +179,7 @@ Harsh owns the paper discovery and reading-list automation flow.
 
 ### Notes
 
-This lane is independent enough to build in parallel and adds strong "research-native" value to the product.
+This lane groups the remaining integrations into one backend workstream that is still mostly independent from the frontend and progress lane.
 
 ## Shared contracts
 
@@ -170,13 +199,15 @@ Each workflow should return a JSON-serializable object like:
 }
 ```
 
-This makes integration into `app.py` straightforward.
+This makes integration into `app.py` and the backend API straightforward.
 
 ## 2. Common file structure
 
 All new code should follow this layout:
 
 ```text
+frontend/
+backend/
 src/
   integrations/
   workflows/
@@ -190,8 +221,8 @@ Each owner should manage only their own state files.
 Examples:
 
 - Arijit: `data/research_log_state.json`, `data/weekly_updates.json`
-- Archit: `data/deadline_alerts.json`, `data/week_plan_history.json`
-- Harsh: `data/papers_seen.json`
+- Archit: no shared backend state ownership by default; owns frontend UI state only
+- Harsh: `data/deadline_alerts.json`, `data/week_plan_history.json`, `data/papers_seen.json`
 
 ## 4. Secrets rule
 
@@ -210,6 +241,7 @@ If a real integration is slow or blocked, each lane should still support mocked/
 Arijit sets up:
 
 - the main Ara entrypoint
+- backend API skeleton
 - top-level workflow registration
 - a lightweight shared utils/state layout
 
@@ -226,6 +258,7 @@ Avoid editing someone else's workflow unless explicitly coordinated.
 After all three lanes exist:
 
 - hook all workflows into `app.py`
+- hook frontend to backend APIs
 - add one manual demo trigger per workflow
 - test one full run per lane
 
@@ -233,21 +266,22 @@ After all three lanes exist:
 
 ### Day 1 / first block
 
-- Arijit: create `src/` structure and app skeleton
-- Archit: stub planning integrations and reminder logic
-- Harsh: stub paper search and reading-list logic
+- Arijit: create backend and `src/` skeleton plus app orchestration
+- Archit: scaffold frontend dashboard and API client
+- Harsh: stub planning and research integrations
 
 ### Day 1 / second block
 
 - Arijit: finish WakaTime + GitHub summary path
-- Archit: finish Calendar + Todoist ranking path
-- Harsh: finish arXiv ranking + dedupe path
+- Archit: finish dashboard cards and manual trigger UI
+- Harsh: finish planning flows plus arXiv ranking and dedupe path
 
 ### Day 1 / final block
 
 - wire Gmail draft creation
 - wire one outbound channel
 - wire one reading list destination
+- wire backend responses into the UI
 - end-to-end testing and demo prep
 
 ## Scope guardrails
@@ -262,12 +296,14 @@ To prevent overload, each owner should prioritize:
 
 ### Archit
 
-- real Todoist
-- real Calendar
-- Telegram fallback if WhatsApp is blocked
+- polished dashboard first
+- workflow cards second
+- settings UI only if core screens are done
 
 ### Harsh
 
+- real Todoist
+- real Calendar
 - real arXiv search via web/API
 - local markdown reading list fallback if Notion/Drive is slow
 
@@ -275,16 +311,20 @@ To prevent overload, each owner should prioritize:
 
 - `Arijit`:
   - core Ara app skeleton
+  - backend API layer
   - WakaTime research log
   - GitHub weekly progress
   - Gmail advisor draft
 
 - `Archit`:
+  - frontend webapp
+  - dashboard and workflow cards
+  - manual trigger and result UI
+
+- `Harsh`:
   - Google Calendar deadline guardian
   - Todoist weekly planner
   - reminder/message delivery
-
-- `Harsh`:
   - arXiv paper scout
   - keyword ranking and dedupe
   - reading list integration
