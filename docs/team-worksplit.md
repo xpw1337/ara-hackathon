@@ -12,6 +12,209 @@ The split below is designed to minimize merge conflicts and let each person fini
 
 This version assumes the final deliverable is a functional webapp, not just backend automations.
 
+## Current status
+
+As of April 19, 2026, the project is in a good `all lanes present, not fully wired` state.
+
+- Arijit lane is in:
+  - Ara app skeleton
+  - shared backend/state scaffolding
+  - research log workflow
+  - advisor update workflow
+- Archit lane is in:
+  - Vite/React frontend scaffold
+  - dashboard cards
+  - frontend API client and settings shell
+- Harsh lane is in:
+  - paper scout
+  - deadline guardian
+  - week planner
+  - Canvas, Calendar, Todoist, delivery, and research integrations
+
+The critical blockers are now integration blockers, not missing feature blockers:
+
+- no real Ara API adapter layer exists yet under `backend/api/`
+- the backend dashboard shape does not match the frontend's expected shape
+- `app.py` does not yet expose `deadline_guardian` or `week_planner`
+- Gmail drafting is still mock-first
+- `tests/test_paper_scout.py` still needs follow-up to be stable in shared environments
+
+## Decisions for the next build block
+
+These decisions are now fixed and should not be re-opened during implementation.
+
+### 1. Backend API framework
+
+Use the `Ara API/runtime` as the backend surface. Do not add a separate `FastAPI` service.
+
+### 2. Frontend-facing dashboard contract
+
+The API response for `GET /api/dashboard` must be:
+
+```json
+{
+  "generatedAt": "2026-04-19T15:30:00",
+  "stats": {
+    "codingHours": 0,
+    "commits": 0,
+    "upcomingDeadlines": 0,
+    "papersFound": 0
+  },
+  "workflows": {
+    "research-log": {
+      "status": "idle",
+      "lastRun": "",
+      "summary": "",
+      "artifacts": [],
+      "errors": []
+    },
+    "advisor-update": {},
+    "paper-scout": {},
+    "deadline-guardian": {},
+    "week-planner": {}
+  },
+  "recentArtifacts": []
+}
+```
+
+### 3. Workflow run endpoints
+
+The API must expose exactly these endpoints:
+
+- `POST /api/workflows/research-log/run`
+- `POST /api/workflows/advisor-update/run`
+- `POST /api/workflows/paper-scout/run`
+- `POST /api/workflows/deadline-guardian/run`
+- `POST /api/workflows/week-planner/run`
+
+Each endpoint should return the shared workflow result shape:
+
+```python
+{
+    "ok": True,
+    "workflow": "advisor_update",
+    "summary": "Short human-readable summary",
+    "artifacts": [],
+    "errors": [],
+    "data": {},
+    "generated_at": "2026-04-19T15:30:00",
+}
+```
+
+### 4. Stats derivation rules
+
+The backend API should derive dashboard stats from saved workflow outputs using these exact rules:
+
+- `codingHours`: latest `research_log.data.wakatime.total_hours`
+- `commits`: latest `advisor_update.data.github.commit_count`
+- `upcomingDeadlines`: latest `deadline_guardian.data.urgent_count`
+- `papersFound`: latest `paper_scout.data.recommendation_count`
+
+If a workflow has never run, the stat should be `0`.
+
+### 5. Ownership boundary
+
+- Arijit owns the Ara-facing API layer, shared contract translation, and `app.py`.
+- Archit owns consuming the locked API shape in the frontend.
+- Harsh owns making the planning/research workflows return the data fields that the API needs.
+
+### 6. Frontend base URL rule
+
+The frontend must use `VITE_API_URL` for the Ara API base URL and must stop assuming `http://localhost:8000/api` as the permanent backend address.
+
+## Next assignments
+
+## 1. Arijit: Integration owner
+
+Arijit owns the shared integration layer from this point forward.
+
+### Scope for the next block
+
+- create the real Ara-facing API adapter layer under `backend/api/`
+- add `GET /api/dashboard`
+- add all five `POST /api/workflows/*/run` routes
+- translate backend state into the locked `stats + workflows` frontend contract
+- wire `run_deadline_guardian` and `run_week_planner` into `app.py` and the Ara API surface
+- keep Gmail drafting mock-first until the HTTP/API path works end to end
+
+### Files Arijit should own next
+
+- `backend/api/`
+- `app.py`
+- any shared serializer or adapter under `backend/`
+
+### Done criteria
+
+- frontend can call the Ara API through `VITE_API_URL`
+- all five run buttons hit real endpoints
+- dashboard data no longer depends on frontend-only mock shape
+- `app.py` exposes all five workflows
+
+## 2. Archit: Frontend contract owner
+
+Archit owns making the UI match the locked backend contract exactly.
+
+### Scope for the next block
+
+- update `frontend/src/api/client.js` to treat the backend API shape as the source of truth
+- replace the hardcoded `http://localhost:8000/api` assumption with `VITE_API_URL`
+- keep mock fallback data only if it matches the exact production contract
+- update `Dashboard.jsx` and workflow cards to read `stats`, `workflows`, and `recentArtifacts`
+- ensure the five workflow ids match the API ids exactly:
+  - `research-log`
+  - `advisor-update`
+  - `paper-scout`
+  - `deadline-guardian`
+  - `week-planner`
+- add graceful loading and backend-error handling without inventing new response shapes
+
+### Files Archit should own next
+
+- `frontend/src/api/client.js`
+- `frontend/src/components/Dashboard.jsx`
+- `frontend/src/components/WorkflowCard.jsx`
+- `frontend/src/pages/Settings.jsx`
+
+### Done criteria
+
+- the dashboard loads from the real backend contract
+- manual run buttons update the correct cards
+- no frontend-only contract assumptions remain
+
+## 3. Harsh: Workflow completion owner
+
+Harsh owns finishing the workflow side so the integration layer has stable inputs.
+
+### Scope for the next block
+
+- make `deadline_guardian` return `data.urgent_count`
+- make `week_planner` return stable `data` fields for top priorities and plan counts
+- make `paper_scout` return `data.recommendation_count`
+- ensure all planning/research workflows follow the shared result shape with `data` and `generated_at`
+- fix `tests/test_paper_scout.py` so it passes reliably in shared environments
+- keep reading list and delivery fallbacks local/mock-safe for demo reliability
+
+### Files Harsh should own next
+
+- `src/workflows/deadline_guardian.py`
+- `src/workflows/week_planner.py`
+- `src/workflows/paper_scout.py`
+- `src/integrations/delivery.py`
+- `tests/test_paper_scout.py`
+
+### Done criteria
+
+- planning and research workflows are API-safe
+- stats can be computed directly from workflow `data`
+- the research-lane test passes reliably
+
+## Recommended implementation order from here
+
+1. Arijit builds the thin backend API and app wiring.
+2. Harsh adjusts workflow outputs so the backend can compute dashboard stats.
+3. Archit switches the frontend to the real API contract.
+4. Arijit finishes Gmail OAuth draft creation only after the full path works end to end.
+
 ## Product recap
 
 The `Grad Student Survival Agent` has:
