@@ -29,6 +29,7 @@ The goal is to make graduate research feel coordinated rather than fragmented.
 Grad students operate across too many disconnected systems:
 
 - coding work lives in GitHub and WakaTime
+- institutional deadlines often live in Canvas
 - project planning lives in Todoist
 - schedules live in Google Calendar
 - reading lives across arXiv and scattered notes
@@ -237,6 +238,7 @@ The student gets warned early enough to act, not merely informed after it is alr
 ### Inputs
 
 - Google Calendar events
+- Canvas assignments, planner items, or calendar events
 
 ### Outputs
 
@@ -245,8 +247,9 @@ The student gets warned early enough to act, not merely informed after it is alr
 
 ### Core behavior
 
-- Identify deadlines and important events
+- Identify deadlines and important events across institutional and personal systems
 - Filter out low-value calendar noise
+- merge duplicate or overlapping events from Canvas and Calendar
 - Send a nudge exactly once per threshold window
 - Include suggested prep action in the reminder
 
@@ -268,6 +271,7 @@ The student starts the week with a prioritized plan instead of an unranked task 
 
 - Todoist tasks
 - Google Calendar events for the upcoming week
+- Canvas deadlines for the upcoming week
 - Open advisor/research obligations from agent memory
 
 ### Outputs
@@ -279,6 +283,7 @@ The student starts the week with a prioritized plan instead of an unranked task 
 ### Core behavior
 
 - Pull open tasks
+- merge institutional deadlines from Canvas
 - Cluster by urgency, effort, and deadline
 - Propose a realistic top-priority sequence
 - Highlight one overloaded day and one recovery opportunity
@@ -304,6 +309,8 @@ Ara is the right runtime because the product requires:
 Ara should be the orchestration and reasoning layer, not the source of truth for every external tool.
 
 Ara should also not be the entire product surface. The user-facing product should be a webapp that calls into the Ara-backed workflow layer.
+
+Canvas is the best-supported college deadline source because it has a public official API. Gradescope does not currently provide a public API, so any Gradescope-related deadlines should be treated as indirect via Canvas when available.
 
 ### Verified Ara capabilities relevant here
 
@@ -394,6 +401,7 @@ Custom tools we implement as Python functions:
 
 - `get_wakatime_summary`
 - `get_github_weekly_commits`
+- `get_canvas_deadlines`
 - `get_calendar_upcoming_events`
 - `get_todoist_tasks`
 - `search_arxiv_papers`
@@ -469,6 +477,16 @@ Secondary:
 - `sent_at`
 - `message_channel`
 
+### AcademicDeadline
+
+- `source`
+- `course_name`
+- `title`
+- `due_at`
+- `url`
+- `priority_hint`
+- `dedupe_key`
+
 ### WeeklyPlan
 
 - `week_start`
@@ -492,7 +510,7 @@ Secondary:
 - As a grad student, I want my coding time logged automatically so I do not lose track of my weekly research effort.
 - As a grad student, I want a Friday advisor update drafted from my real work so I can send a thoughtful update quickly.
 - As a grad student, I want relevant new papers surfaced weekly so I stay current without browsing for hours.
-- As a grad student, I want deadline nudges before key events so I can prepare early.
+- As a grad student, I want deadline nudges from Canvas and Calendar before key events so I can prepare early.
 - As a grad student, I want a Sunday week plan based on my real tasks and calendar so I start the week with direction.
 
 ## 11. MVP Scope
@@ -504,6 +522,7 @@ Secondary:
 - workflow result cards in UI
 - WakaTime summary fetch
 - GitHub weekly commit fetch
+- Canvas deadline fetch
 - advisor update draft generation
 - arXiv paper discovery
 - Google Calendar deadline nudge
@@ -532,6 +551,7 @@ Secondary:
 - The system must display the latest workflow outputs in the UI.
 - The system must store enough local state to avoid duplicate alerts and duplicate paper recommendations.
 - The system must draft, not auto-send, advisor emails by default.
+- The system must merge Canvas and Calendar deadlines into one reminder surface.
 - The system must send a deadline nudge exactly once per configured threshold.
 - The system must generate a weekly plan from Todoist and Calendar together, not from Todoist alone.
 - The system must allow keyword configuration for paper search.
@@ -574,6 +594,7 @@ Each card should show:
 - project/repo name
 - preferred delivery channel
 - selected writing destination
+- Canvas base URL and token status
 
 ### Design requirements
 
@@ -589,7 +610,7 @@ Mitigation:
 
 - build the tool interfaces first
 - mock one or two sources if auth setup becomes slow
-- prioritize Gmail, GitHub, Calendar, Todoist, and one writing destination
+- prioritize Gmail, GitHub, Canvas, Calendar, Todoist, and one writing destination
 
 ## Risk: WhatsApp delivery may not be available
 
@@ -619,6 +640,14 @@ Mitigation:
 - assign one person full ownership of frontend
 - keep the UI focused on dashboard + cards + manual runs
 - render workflow outputs as polished summaries, not raw logs
+## Risk: Gradescope API is not available
+
+Mitigation:
+
+- do not depend on a standalone Gradescope integration
+- use Canvas as the official institutional deadline source
+- treat Gradescope deadlines as indirect only if they surface through Canvas
+
 ## 16. Demo Narrative
 
 ### Demo goal
@@ -628,7 +657,7 @@ Show that the agent does real academic upkeep across tools with minimal user pro
 ### Suggested 2-3 minute demo
 
 1. Open the web dashboard and explain the 5 workflow cards.
-2. Seed or connect real WakaTime, GitHub, Calendar, and Todoist data.
+2. Seed or connect real WakaTime, GitHub, Canvas, Calendar, and Todoist data.
 3. Run the Friday update workflow.
 4. Show:
    - fetched coding hours
@@ -661,6 +690,7 @@ Show that the agent does real academic upkeep across tools with minimal user pro
 
 - GitHub weekly commit tool
 - WakaTime summary tool
+- Canvas deadline tool
 - Todoist task fetch tool
 - Calendar upcoming deadline tool
 - arXiv search tool
@@ -702,6 +732,7 @@ ara-hackathon/
     integrations/
       wakatime.py
       github_client.py
+      canvas_client.py
       todoist_client.py
       calendar_client.py
       gmail_client.py
@@ -725,7 +756,7 @@ ara-hackathon/
 - A research log can be generated from WakaTime data and written to one destination.
 - A Friday advisor update can be drafted from GitHub and WakaTime data.
 - A weekly paper scout can produce 3 non-duplicate relevant papers.
-- A 48-hour deadline reminder can be generated from Calendar events.
+- A 48-hour deadline reminder can be generated from Canvas and Calendar events.
 - A weekly Todoist-based plan can be delivered to the user.
 - The app can demonstrate at least one outbound message channel through Ara.
 ## 21. Open Decisions
@@ -733,15 +764,24 @@ ara-hackathon/
 - Primary write-back target: Notion or Google Drive?
 - Primary nudge channel: Telegram or WhatsApp?
 - Real auth for all integrations or partial mock data for demo resilience?
+- Canvas token flow: personal token or OAuth?
 - Single-project only for MVP or multiple projects later?
 ## 22. Recommendation for the Hackathon
 
 To maximize reliability and still look impressive:
 
-- use real GitHub, Todoist, Calendar, and Gmail draft flows
+- use real GitHub, Canvas, Todoist, Calendar, and Gmail draft flows
 - use Telegram as the main nudge channel unless WhatsApp is confirmed in Ara
 - use either Notion or Drive, not both, for MVP
 - keep arXiv discovery real, but cache results locally for demo stability
 - keep the UI focused on one polished dashboard rather than many screens
 
 This yields a product that feels rich and cross-tool without taking on too much integration risk in one day.
+
+### Supporting sources
+
+- [Canvas LMS API docs](https://developerdocs.instructure.com/services/canvas)
+- [Canvas Assignments API](https://developerdocs.instructure.com/services/canvas/resources/assignments)
+- [Canvas Calendar Events API](https://developerdocs.instructure.com/services/canvas/file.all_resources/calendar_events)
+- [Canvas Planner API](https://developerdocs.instructure.com/services/canvas/resources/planner)
+- [Gradescope Public API status](https://guides.gradescope.com/hc/en-us/articles/36028522325901-Gradescope-Public-API)

@@ -23,8 +23,8 @@ The `Grad Student Survival Agent` has:
 - WakaTime to weekly research log
 - GitHub commit tracking to Friday advisor update draft
 - arXiv paper scout to reading list
-- Google Calendar deadline reminder
-- Todoist Sunday week planner
+- Canvas + Google Calendar deadline reminder
+- Todoist Sunday week planner with academic deadlines
 
 To keep the build practical, we are grouping these into 3 independent lanes:
 
@@ -103,6 +103,7 @@ Archit owns the user-facing webapp.
   - displays latest outputs
   - lets the user trigger runs manually
   - exposes configuration inputs for keywords and preferences
+  - includes Canvas connection/settings state in the UI
 
 ### Suggested file ownership
 
@@ -130,6 +131,7 @@ Harsh owns the planning and research automations.
 
 ### Main features
 
+- Canvas deadline fetch
 - Google Calendar deadline scan
 - 48-hour reminder logic
 - Todoist task fetch
@@ -149,12 +151,14 @@ Harsh owns the planning and research automations.
   - avoids repeats
   - updates a reading list
 - planning workflows that:
+  - merge Canvas and Calendar deadlines
   - detect deadline risks
   - generate weekly plans
   - send reminders
 
 ### Suggested file ownership
 
+- `src/integrations/canvas_client.py`
 - `src/integrations/calendar_client.py`
 - `src/integrations/todoist_client.py`
 - `src/integrations/delivery.py`
@@ -169,6 +173,7 @@ Harsh owns the planning and research automations.
 
 - A weekly run can produce top 3 papers from user keywords
 - Already-seen papers are filtered out
+- Canvas deadlines can be fetched and normalized
 - Calendar events can be filtered into "needs reminder" vs "ignore"
 - Todoist tasks can be ranked into a weekly plan
 - Reminder delivery works through one reliable channel
@@ -268,13 +273,13 @@ After all three lanes exist:
 
 - Arijit: create backend and `src/` skeleton plus app orchestration
 - Archit: scaffold frontend dashboard and API client
-- Harsh: stub planning and research integrations
+- Harsh: stub planning, Canvas, and research integrations
 
 ### Day 1 / second block
 
 - Arijit: finish WakaTime + GitHub summary path
 - Archit: finish dashboard cards and manual trigger UI
-- Harsh: finish planning flows plus arXiv ranking and dedupe path
+- Harsh: finish Canvas/planning flows plus arXiv ranking and dedupe path
 
 ### Day 1 / final block
 
@@ -303,6 +308,7 @@ To prevent overload, each owner should prioritize:
 ### Harsh
 
 - real Todoist
+- real Canvas
 - real Calendar
 - real arXiv search via web/API
 - local markdown reading list fallback if Notion/Drive is slow
@@ -322,6 +328,7 @@ To prevent overload, each owner should prioritize:
   - manual trigger and result UI
 
 - `Harsh`:
+  - Canvas academic deadline integration
   - Google Calendar deadline guardian
   - Todoist weekly planner
   - reminder/message delivery

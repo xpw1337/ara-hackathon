@@ -10,6 +10,7 @@ Graduate research lives across too many disconnected systems:
 
 - WakaTime
 - GitHub
+- Canvas
 - Google Calendar
 - Gmail
 - Todoist
@@ -23,7 +24,7 @@ This project uses Ara as the persistent automation and reasoning layer behind a 
 - Watches WakaTime coding activity and logs research work to Notion or Google Drive
 - Monitors GitHub commits on the pitch tipping project and drafts a weekly advisor update
 - Searches for relevant new arXiv papers and adds the top results to a reading list
-- Scans Google Calendar for upcoming deadlines and sends a reminder 48 hours early
+- Scans Canvas and Google Calendar for upcoming deadlines and sends a reminder 48 hours early
 - Pulls Todoist tasks and generates a prioritized weekly plan every Sunday
 
 ## Why this is a strong hackathon project
@@ -64,6 +65,7 @@ The hackathon MVP includes a functional webapp plus five automations:
 - manual buttons to run each workflow
 - cards for advisor draft, research log, paper scout, deadline alerts, and weekly plan
 - lightweight settings/config surface for keywords and integration status
+- Canvas-backed college deadline visibility
 
 ### Automations
 
@@ -74,9 +76,9 @@ The hackathon MVP includes a functional webapp plus five automations:
 3. `Paper Scout`
    Search arXiv for new relevant papers and update a reading list.
 4. `Deadline Guardian`
-   Watch Calendar events and send a reminder 48 hours before important deadlines.
+   Watch Canvas and Calendar events and send a reminder 48 hours before important deadlines.
 5. `Sunday Week Planner`
-   Pull Todoist tasks and build a prioritized plan for the upcoming week.
+   Pull Todoist tasks plus upcoming Canvas/Calendar deadlines and build a prioritized plan for the upcoming week.
 
 ## Demo flow
 
@@ -84,7 +86,7 @@ The hackathon MVP includes a functional webapp plus five automations:
 2. Show recent coding activity and GitHub progress in the UI.
 3. Run the advisor update workflow and open the drafted email result card.
 4. Run the paper scout workflow and show the reading list update in the UI.
-5. Trigger a deadline reminder flow.
+5. Trigger a Canvas-backed deadline reminder flow.
 6. Generate the Sunday week plan and show the summary plus outbound message result.
 
 Judge takeaway:
@@ -137,6 +139,8 @@ ara deploy app.py --cron "*/5 * * * *"
 
 For the hackathon build, Ara should be used for orchestration, memory, scheduling, and outbound messaging. The webapp should sit on top of a thin API layer that calls the Ara workflows and exposes workflow results to the UI. External services like WakaTime, Todoist, Calendar, Gmail, Notion, and Drive should be integrated through custom tools.
 
+Canvas should be treated as the primary institutional deadline source. If a course uses Gradescope through Canvas, those deadlines may still surface through Canvas and can be handled indirectly without a standalone Gradescope API integration.
+
 ## Product doc
 
 The main build spec lives here:
@@ -147,6 +151,6 @@ The main build spec lives here:
 
 1. Refactor `app.py` from the earlier starter concept into the Grad Student Survival Agent flows.
 2. Scaffold a frontend dashboard and a thin backend API for workflow triggers and result cards.
-3. Create integration modules for WakaTime, GitHub, Todoist, Calendar, Gmail, and research search.
+3. Create integration modules for WakaTime, GitHub, Canvas, Todoist, Calendar, Gmail, and research search.
 4. Add local state files to prevent duplicate alerts and repeated paper recommendations.
 5. Implement one reliable outbound message channel, with Telegram as the safest fallback if WhatsApp is unavailable.
