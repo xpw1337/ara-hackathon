@@ -53,6 +53,7 @@ Build only these 4 pieces:
 
 - `app.py`: Ara SDK starter automation
 - `docs/ideas.md`: ranked hackathon concepts
+- `docs/prd-grad-student-survival-agent.md`: detailed product requirements for the finalized concept
 - `requirements.txt`: Python dependency
 
 ## Local setup
