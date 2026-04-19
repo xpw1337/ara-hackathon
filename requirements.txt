@@ -1,3 +1,4 @@
 ara-sdk
 fastapi
 uvicorn
+python-dotenv

@@ -26,8 +26,8 @@ _WORKFLOW_KEY_TO_ID = {
     "week_planner": "week-planner",
 }
 
-_DEADLINE_RUNS_PATH = "data/deadline_guardian_runs.json"
-_WEEK_PLANNER_RUNS_PATH = "data/week_planner_runs.json"
+_DEADLINE_ALERTS_PATH = "data/deadline_alerts.json"
+_WEEK_PLAN_HISTORY_PATH = "data/week_plan_history.json"
 
 
 def _idle_workflow() -> dict[str, Any]:
@@ -100,8 +100,8 @@ def build_frontend_dashboard() -> dict[str, Any]:
     latest_log = _latest_entry(RESEARCH_LOG_STATE_PATH, "entries")
     latest_update = _latest_entry(WEEKLY_UPDATES_PATH, "updates")
     latest_scout = _latest_entry(PAPER_SCOUT_RUNS_PATH, "runs")
-    latest_guardian = _latest_entry(_DEADLINE_RUNS_PATH, "runs")
-    latest_planner = _latest_entry(_WEEK_PLANNER_RUNS_PATH, "runs")
+    latest_guardian = _latest_entry(_DEADLINE_ALERTS_PATH, "runs")
+    latest_planner = _latest_entry(_WEEK_PLAN_HISTORY_PATH, "plans")
 
     workflows: dict[str, Any] = {}
     for wf_id in WORKFLOW_IDS:

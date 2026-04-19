@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
 
 from backend.api.routes import router as api_router
 

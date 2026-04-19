@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip list *)",
+      "Bash(pip install *)",
+      "Bash(python -c \"from backend.server import app; print\\('Server module loads OK'\\)\")",
+      "Bash(python -m uvicorn backend.server:app --host 0.0.0.0 --port 8000)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill *)",
+      "Bash(curl -s http://localhost:8000/api/dashboard)",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:8000/api/workflows/research-log/run -H \"Content-Type: application/json\" -d \"{}\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/workflows/advisor-update/run -H \"Content-Type: application/json\" -d \"{}\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/workflows/deadline-guardian/run -H \"Content-Type: application/json\" -d \"{}\")",
+      "Bash(curl -s http://localhost:8000/api/settings)",
+      "Bash(curl -s -X POST http://localhost:8000/api/settings -H \"Content-Type: application/json\" -d '{\"advisorEmail\":\"advisor@jhu.edu\"}')",
+      "Bash(curl -s -X POST http://localhost:8000/api/workflows/paper-scout/run -H \"Content-Type: application/json\" -d \"{}\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(python -c \"import ara_sdk as ara; print\\(dir\\(ara\\)\\)\")",
+      "Bash(python *)",
+      "Bash(curl -s -X POST http://localhost:8000/api/workflows/week-planner/run -H \"Content-Type: application/json\" -d \"{}\")",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git stash *)",
+      "Bash(awk '{print $5}')",
+      "Bash(curl -s -X POST http://localhost:8000/api/workflows/research-log/run -H \"Content-Type: application/json\" -d '{\"repoName\":\"xpw1337/ara-hackathon\"}')",
+      "Bash(findstr :8000)",
+      "Bash(timeout 3)",
+      "Bash(curl -s http://127.0.0.1:8000/api/dashboard)"
+    ]
+  }
+}

@@ -1,21 +1,16 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Body
 
 from backend.api.dashboard import build_frontend_dashboard
 from backend.services.settings import get_settings, update_settings
-from src.state.store import append_record, current_timestamp
 from src.workflows.advisor_update import run_advisor_update
 from src.workflows.deadline_guardian import run_deadline_guardian
 from src.workflows.paper_scout import run_paper_scout
 from src.workflows.research_log import run_research_log
 from src.workflows.week_planner import run_week_planner
-
-DEADLINE_RUNS_PATH = Path("data") / "deadline_guardian_runs.json"
-WEEK_PLANNER_RUNS_PATH = Path("data") / "week_planner_runs.json"
 
 router = APIRouter()
 
@@ -70,20 +65,14 @@ def run_paper_scout_endpoint(
 def run_deadline_guardian_endpoint(
     body: dict[str, Any] = Body(default={}),
 ) -> dict[str, Any]:
-    result = run_deadline_guardian()
-    result.setdefault("generated_at", current_timestamp())
-    append_record(DEADLINE_RUNS_PATH, "runs", result, dedupe_key=None)
-    return result
+    return run_deadline_guardian()
 
 
 @router.post("/workflows/week-planner/run")
 def run_week_planner_endpoint(
     body: dict[str, Any] = Body(default={}),
 ) -> dict[str, Any]:
-    result = run_week_planner()
-    result.setdefault("generated_at", current_timestamp())
-    append_record(WEEK_PLANNER_RUNS_PATH, "runs", result, dedupe_key=None)
-    return result
+    return run_week_planner()
 
 
 @router.get("/settings")

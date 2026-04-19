@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import os
 import re
+import ssl
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+
+import certifi
 from datetime import datetime, timezone
 from typing import Iterable
 
@@ -89,7 +92,8 @@ def _fetch_from_arxiv(keywords: list[str], max_results: int) -> list[PaperCandid
         "sortOrder": "descending",
     }
     url = f"{ARXIV_API_URL}?{urllib.parse.urlencode(params)}"
-    with urllib.request.urlopen(url, timeout=5) as response:
+    ctx = ssl.create_default_context(cafile=certifi.where())
+    with urllib.request.urlopen(url, timeout=15, context=ctx) as response:
         payload = response.read()
 
     root = ET.fromstring(payload)

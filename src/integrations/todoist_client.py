@@ -28,7 +28,10 @@ def fetch_todoist_tasks() -> List[PlanItem]:
     if not token:
         return _mock_tasks()
 
-    return _fetch_live_tasks(token)
+    try:
+        return _fetch_live_tasks(token)
+    except RuntimeError:
+        return _mock_tasks()
 
 
 def _fetch_live_tasks(token: str) -> List[PlanItem]:
