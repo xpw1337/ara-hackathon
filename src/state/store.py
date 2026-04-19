@@ -10,6 +10,9 @@ DATA_DIR = Path("data")
 RESEARCH_LOG_STATE_PATH = DATA_DIR / "research_log_state.json"
 WEEKLY_UPDATES_PATH = DATA_DIR / "weekly_updates.json"
 DRAFT_ARCHIVE_PATH = DATA_DIR / "draft_archive.json"
+PAPER_SCOUT_RUNS_PATH = DATA_DIR / "paper_scout_runs.json"
+PAPER_SCOUT_STATE_PATH = DATA_DIR / "papers_seen.json"
+READING_LIST_PATH = DATA_DIR / "reading_list.md"
 
 
 def current_timestamp() -> str:
@@ -75,9 +78,44 @@ def _latest_entry(path: Path, collection_key: str) -> dict[str, Any] | None:
     return collection[-1]
 
 
+def _paper_scout_snapshot() -> dict[str, Any]:
+    latest_scout = _latest_entry(PAPER_SCOUT_RUNS_PATH, "runs")
+    seen_state = load_json(PAPER_SCOUT_STATE_PATH, {"seen_ids": []})
+    seen_ids = seen_state.get("seen_ids", [])
+    reading_list_exists = READING_LIST_PATH.exists()
+
+    if latest_scout:
+        return {
+            "workflow": "paper_scout",
+            "title": "Paper Scout",
+            "status": "ready" if latest_scout.get("ok", False) else "error",
+            "summary": latest_scout.get("summary", "Paper scout ran."),
+            "updated_at": latest_scout.get("generated_at", ""),
+            "details": {
+                "seen_paper_count": len(seen_ids),
+                "reading_list_path": str(READING_LIST_PATH),
+                "reading_list_exists": reading_list_exists,
+            },
+        }
+
+    return {
+        "workflow": "paper_scout",
+        "title": "Paper Scout",
+        "status": "idle",
+        "summary": "No paper scout run yet.",
+        "updated_at": "",
+        "details": {
+            "seen_paper_count": len(seen_ids),
+            "reading_list_path": str(READING_LIST_PATH),
+            "reading_list_exists": reading_list_exists,
+        },
+    }
+
+
 def build_dashboard_snapshot() -> dict[str, Any]:
     latest_log = _latest_entry(RESEARCH_LOG_STATE_PATH, "entries")
     latest_update = _latest_entry(WEEKLY_UPDATES_PATH, "updates")
+    latest_paper_scout = _latest_entry(PAPER_SCOUT_RUNS_PATH, "runs")
 
     cards = [
         {
@@ -100,13 +138,7 @@ def build_dashboard_snapshot() -> dict[str, Any]:
             ),
             "updated_at": (latest_update or {}).get("generated_at", ""),
         },
-        {
-            "workflow": "paper_scout",
-            "title": "Paper Scout",
-            "status": "pending",
-            "summary": "Awaiting research-lane implementation.",
-            "updated_at": "",
-        },
+        _paper_scout_snapshot(),
         {
             "workflow": "deadline_guardian",
             "title": "Deadline Guardian",
@@ -124,7 +156,7 @@ def build_dashboard_snapshot() -> dict[str, Any]:
     ]
 
     recent_artifacts: list[dict[str, Any]] = []
-    for latest in [latest_log, latest_update]:
+    for latest in [latest_log, latest_update, latest_paper_scout]:
         if not latest:
             continue
         for artifact in latest.get("artifacts", [])[:1]:

@@ -6,6 +6,7 @@ import ara_sdk as ara
 
 from src.state.store import build_dashboard_snapshot
 from src.workflows.advisor_update import run_advisor_update
+from src.workflows.paper_scout import run_paper_scout
 from src.workflows.research_log import run_research_log
 
 
@@ -49,6 +50,22 @@ def run_advisor_update_workflow(
     )
 
 
+@ara.tool
+def run_paper_scout_workflow(
+    keywords: str = "",
+    max_results: int = 12,
+    top_k: int = 3,
+    reading_list_target: str = "local",
+) -> dict[str, Any]:
+    """Search, rank, dedupe, and persist weekly paper recommendations."""
+    return run_paper_scout(
+        keywords=keywords.strip() or None,
+        max_results=max_results,
+        top_k=top_k,
+        reading_list_target=reading_list_target,
+    )
+
+
 ara.Automation(
     "grad-student-survival-agent",
     system_instructions=(
@@ -62,5 +79,6 @@ ara.Automation(
         get_dashboard_snapshot,
         run_research_log_workflow,
         run_advisor_update_workflow,
+        run_paper_scout_workflow,
     ],
 )
