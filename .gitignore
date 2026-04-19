@@ -1,4 +1,13 @@
+# ================================================
+# ARA HACKATHON - FULL STACK PROJECT GITIGNORE
+# ================================================
+
+# --------------------------------
+# Python / Backend
+# --------------------------------
 .venv/
+venv/
+env/
 __pycache__/
 *.pyc
 *.pyo
@@ -6,8 +15,71 @@ __pycache__/
 .Python
 .pytest_cache/
 .mypy_cache/
-.DS_Store
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# --------------------------------
+# Node.js / Frontend
+# --------------------------------
+node_modules/
+dist/
+.npm
+.yarn
+.pnp
+.pnp.js
+.parcel-cache/
+.vite/
+*.tsbuildinfo
+
+# --------------------------------
+# Environment Variables
+# --------------------------------
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --------------------------------
+# Data Files
+# --------------------------------
 data/*.json
-data/reading_list.md
-!.gitkeep
+data/*.md
+data/*.csv
+data/*.pdf
+data/logs/
+!data/.gitkeep
+
+# --------------------------------
+# IDE & Editor Files
+# --------------------------------
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --------------------------------
+# Logs
+# --------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log.*
+
+# --------------------------------
+# OS Generated
+# --------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
