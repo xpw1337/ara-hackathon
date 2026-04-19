@@ -93,11 +93,66 @@ Judge takeaway:
 
 "This isn't just an assistant. It's an academic operations layer that keeps a grad student's work life in sync."
 
+## Current build status
+
+As of April 19, 2026, the repo is in an `all lanes present, not fully wired` state.
+
+- Arijit lane is in: Ara app skeleton, shared state layer, research log, advisor update, and backend fixtures.
+- Archit lane is in: Vite/React frontend scaffold with dashboard cards, API client, and settings shell.
+- Harsh lane is in: paper scout, deadline guardian, week planner, and the supporting integration clients.
+
+What is still missing before the app works end to end:
+
+- there is no real Ara API adapter layer wired for the frontend yet
+- the backend dashboard shape currently centers on `workflow_cards`, while the frontend expects `stats` plus `workflows`
+- `app.py` exposes `research_log`, `advisor_update`, and `paper_scout`, but not `deadline_guardian` or `week_planner`
+- Gmail drafting is still mock-first rather than real OAuth-backed draft creation
+- `tests/test_paper_scout.py` still needs follow-up so the research lane is stable in shared environments
+
+## Integration decisions
+
+These decisions are now locked so the team can move without re-discussing architecture:
+
+1. The backend surface will be the `Ara API/runtime`. Do not add a separate `FastAPI` service.
+2. The frontend-facing dashboard contract is:
+
+```json
+{
+  "generatedAt": "2026-04-19T15:30:00",
+  "stats": {
+    "codingHours": 0,
+    "commits": 0,
+    "upcomingDeadlines": 0,
+    "papersFound": 0
+  },
+  "workflows": {
+    "research-log": {
+      "status": "idle",
+      "lastRun": "",
+      "summary": "",
+      "artifacts": [],
+      "errors": []
+    }
+  },
+  "recentArtifacts": []
+}
+```
+
+3. The canonical workflow run endpoints are:
+   - `POST /api/workflows/research-log/run`
+   - `POST /api/workflows/advisor-update/run`
+   - `POST /api/workflows/paper-scout/run`
+   - `POST /api/workflows/deadline-guardian/run`
+   - `POST /api/workflows/week-planner/run`
+4. The frontend should consume the Ara API base URL through `VITE_API_URL` instead of hardcoding `http://localhost:8000/api`.
+5. Internal storage in `src/state/store.py` can keep using `workflow_cards` if useful, but the Ara-facing API layer must translate that into the frontend contract above.
+6. No new product features should be added until the API layer and all five workflow triggers work through one shared contract.
+
 ## Current repo contents
 
-- `app.py`: Ara starter automation entrypoint
-- `frontend/`: planned webapp UI
-- `backend/`: planned API layer between UI and workflows
+- `app.py`: Ara runtime entrypoint with research log, advisor update, and paper scout tools
+- `frontend/`: Vite/React webapp scaffold with dashboard UI and API client
+- `backend/`: currently fixtures only; still needs the real Ara-facing API adapter layer
 - `docs/ideas.md`: earlier idea exploration
 - `docs/prd-grad-student-survival-agent.md`: detailed product requirements and implementation plan
 - `docs/team-worksplit.md`: team ownership and parallel work plan
@@ -149,8 +204,31 @@ The main build spec lives here:
 
 ## Next steps
 
-1. Refactor `app.py` from the earlier starter concept into the Grad Student Survival Agent flows.
-2. Scaffold a frontend dashboard and a thin backend API for workflow triggers and result cards.
-3. Create integration modules for WakaTime, GitHub, Canvas, Todoist, Calendar, Gmail, and research search.
-4. Add local state files to prevent duplicate alerts and repeated paper recommendations.
-5. Implement one reliable outbound message channel, with Telegram as the safest fallback if WhatsApp is unavailable.
+1. Build the real Ara-facing API adapter layer under `backend/api/`.
+2. Normalize dashboard and workflow responses to the locked `stats + workflows` API contract.
+3. Wire `deadline_guardian` and `week_planner` into `app.py` and the Ara API surface.
+4. Make the frontend consume the real Ara API contract instead of relying on mock-shape fallbacks.
+5. Finish Gmail OAuth drafting and one reliable outbound reminder channel after the integration layer works.
+
+## Local development right now
+
+Ara runtime:
+
+```bash
+ara auth login
+ara run app.py
+```
+
+Frontend scaffold:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Current caveat:
+
+- the frontend currently assumes an HTTP API at `http://localhost:8000/api`
+- that should be replaced with the Ara API base URL via `VITE_API_URL`
+- so the dashboard can render with mock fallbacks, but the full product is not wired end to end yet
