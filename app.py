@@ -4,16 +4,18 @@ from typing import Any
 
 import ara_sdk as ara
 
-from src.state.store import build_dashboard_snapshot
+from backend.api.dashboard import build_frontend_dashboard
 from src.workflows.advisor_update import run_advisor_update
+from src.workflows.deadline_guardian import run_deadline_guardian
 from src.workflows.paper_scout import run_paper_scout
 from src.workflows.research_log import run_research_log
+from src.workflows.week_planner import run_week_planner
 
 
 @ara.tool
-def get_dashboard_snapshot() -> dict[str, Any]:
-    """Return the latest workflow summaries for the frontend/dashboard."""
-    return build_dashboard_snapshot()
+def get_dashboard() -> dict[str, Any]:
+    """Return the dashboard snapshot in the locked frontend contract shape."""
+    return build_frontend_dashboard()
 
 
 @ara.tool
@@ -66,6 +68,18 @@ def run_paper_scout_workflow(
     )
 
 
+@ara.tool
+def run_deadline_guardian_workflow() -> dict[str, Any]:
+    """Check for 48-hour deadline risks and send urgent reminders."""
+    return run_deadline_guardian()
+
+
+@ara.tool
+def run_week_planner_workflow() -> dict[str, Any]:
+    """Generate a prioritized weekly plan from Todoist, Canvas, and Calendar."""
+    return run_week_planner()
+
+
 ara.Automation(
     "grad-student-survival-agent",
     system_instructions=(
@@ -76,9 +90,11 @@ ara.Automation(
         "unless the tool result says it was live and successful."
     ),
     tools=[
-        get_dashboard_snapshot,
+        get_dashboard,
         run_research_log_workflow,
         run_advisor_update_workflow,
         run_paper_scout_workflow,
+        run_deadline_guardian_workflow,
+        run_week_planner_workflow,
     ],
 )

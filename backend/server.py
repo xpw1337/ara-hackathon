@@ -6,7 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.routes import router as api_router
 
-app = FastAPI(title="Grad Student Survival Agent", version="0.1.0")
+app = FastAPI(
+    title="Grad Student Survival Agent — Ara API Adapter",
+    version="0.1.0",
+)
 
 app.add_middleware(
     CORSMiddleware,
