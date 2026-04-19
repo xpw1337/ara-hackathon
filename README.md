@@ -154,3 +154,98 @@ The main build spec lives here:
 3. Create integration modules for WakaTime, GitHub, Canvas, Todoist, Calendar, Gmail, and research search.
 4. Add local state files to prevent duplicate alerts and repeated paper recommendations.
 5. Implement one reliable outbound message channel, with Telegram as the safest fallback if WhatsApp is unavailable.
+
+## Local Run test steps:
+
+# Project Running Instructions
+
+This is the complete step-by-step guide to run this Grad Student Survival Agent project:
+
+---
+
+## Prerequisites
+- Python 3.10+
+- Git
+- Ara CLI installed
+
+---
+
+## 1. Initial Setup
+
+First open your terminal in the project directory:
+```
+cd c:\Users\archi\Desktop\ara-hackathon
+```
+
+### Create and activate virtual environment (Windows):
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 2. Authenticate with Ara
+```bash
+ara auth login
+```
+This will open a browser window for you to login to your Ara account.
+
+---
+
+## 3. Run the project locally
+```bash
+ara run app.py
+```
+
+This will start the automation agent. You will see the Ara dashboard open in your browser automatically where you can interact with the agent.
+
+---
+
+## 4. Initialize Demo Data
+Once the agent is running, you can seed demo context:
+1. Open the Ara dashboard
+2. Send message: `seed demo context`
+3. This will populate example tasks, notes and dashboard data
+
+---
+
+## Available Commands & Actions
+You can use these commands in the Ara chat interface:
+
+| Action | Command |
+|--------|---------|
+| View your dashboard | `show dashboard` |
+| Add a new task | `add task "Task title" [due:YYYY-MM-DDTHH:MM] [importance:1-5]` |
+| Complete a task | `complete task "Task title"` |
+| Save a note | `save note "Your note text"` |
+| Reset demo data | `seed demo context` |
+
+---
+
+## 5. Deploy (Optional)
+To deploy as a persistent background automation:
+```bash
+ara deploy app.py --cron "*/5 * * * *"
+```
+
+This will run the agent automatically every 5 minutes.
+
+---
+
+## Project Status
+- Backend automation is fully working in `app.py`
+- State persistence implemented
+- Core tools are functional
+- Frontend UI is in development (skeleton exists in `/frontend`)
+
+## Next Things You Can Do
+1. Test the agent with the demo data
+2. Try adding your own tasks and notes
+3. View the automatically prioritized dashboard
+4. Check the docs folder for full product requirements
