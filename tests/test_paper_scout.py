@@ -29,6 +29,7 @@ class PaperScoutWorkflowTests(unittest.TestCase):
             temp_path = Path(temp_dir)
             state_path = temp_path / "papers_seen.json"
             reading_list_path = temp_path / "reading_list.md"
+            runs_path = temp_path / "paper_scout_runs.json"
             state_path.write_text(
                 json.dumps({"seen_ids": ["paper-1"], "updated_at": "2026-04-19T12:00:00"}),
                 encoding="utf-8",
@@ -46,11 +47,13 @@ class PaperScoutWorkflowTests(unittest.TestCase):
                     keywords=["hci", "behavior modeling"],
                     state_path=str(state_path),
                     reading_list_path=str(reading_list_path),
+                    runs_path=runs_path,
                 )
 
             self.assertTrue(result["ok"])
             self.assertEqual(result["workflow"], "paper_scout")
             self.assertEqual(len(result["artifacts"][0]["recommendations"]), 3)
+            self.assertEqual(result["data"]["recommendation_count"], 3)
             self.assertTrue(reading_list_path.exists())
             markdown = reading_list_path.read_text(encoding="utf-8")
             self.assertIn("Fresh Paper A", markdown)
@@ -61,22 +64,27 @@ class PaperScoutWorkflowTests(unittest.TestCase):
                 saved_state["seen_ids"],
                 ["paper-1", "paper-2", "paper-3", "paper-4"],
             )
+            saved_runs = json.loads(runs_path.read_text(encoding="utf-8"))
+            self.assertEqual(saved_runs["runs"][-1]["data"]["recommendation_count"], 3)
 
     def test_run_paper_scout_uses_default_keywords(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             state_path = temp_path / "papers_seen.json"
             reading_list_path = temp_path / "reading_list.md"
+            runs_path = temp_path / "paper_scout_runs.json"
             candidates = [_candidate("paper-2", "Fresh Paper A", 9.0)]
 
             with patch("src.workflows.paper_scout.fetch_paper_candidates", return_value=candidates) as fetch_mock:
                 result = run_paper_scout(
                     state_path=str(state_path),
                     reading_list_path=str(reading_list_path),
+                    runs_path=runs_path,
                 )
 
             self.assertTrue(result["ok"])
             self.assertEqual(fetch_mock.call_args.args[0], DEFAULT_KEYWORDS)
+            self.assertEqual(result["data"]["recommendation_count"], 1)
 
 
 if __name__ == "__main__":
