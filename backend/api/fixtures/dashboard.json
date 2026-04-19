@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-04-19T15:00:00",
+  "workflow_cards": [
+    {
+      "workflow": "research_log",
+      "title": "Research Log",
+      "status": "ready",
+      "summary": "Logged 11.0 hours for the week of 2026-04-13 with focus on model training, evaluation, backend scaffolding.",
+      "updated_at": "2026-04-19T15:00:00"
+    },
+    {
+      "workflow": "advisor_update",
+      "title": "Advisor Update",
+      "status": "ready",
+      "summary": "Prepared advisor update draft with 3 progress points for the week of 2026-04-13.",
+      "updated_at": "2026-04-19T15:00:00"
+    },
+    {
+      "workflow": "paper_scout",
+      "title": "Paper Scout",
+      "status": "pending",
+      "summary": "Awaiting research-lane implementation.",
+      "updated_at": ""
+    },
+    {
+      "workflow": "deadline_guardian",
+      "title": "Deadline Guardian",
+      "status": "pending",
+      "summary": "Awaiting planning-lane implementation.",
+      "updated_at": ""
+    },
+    {
+      "workflow": "week_planner",
+      "title": "Week Planner",
+      "status": "pending",
+      "summary": "Awaiting planning-lane implementation.",
+      "updated_at": ""
+    }
+  ],
+  "recent_artifacts": [
+    {
+      "type": "markdown",
+      "title": "Research log for 2026-04-13",
+      "content": "# Weekly Research Log\n\n- Week of: 2026-04-13\n- Project: pitch-tipping\n- Coding hours captured: 11.0\n- Main themes: model training, evaluation, backend scaffolding",
+      "metadata": {
+        "week_start": "2026-04-13",
+        "project_name": "pitch-tipping",
+        "total_hours": 11.0,
+        "source_mode": "mock",
+        "commit_refs": [
+          "2f8a4d1",
+          "71d2c08",
+          "91e14bc"
+        ]
+      }
+    },
+    {
+      "type": "email_draft",
+      "title": "Weekly update for pitch-tipping (2026-04-13)",
+      "content": "Hi,\n\nHere is my weekly update for pitch-tipping for the week of 2026-04-13.",
+      "metadata": {
+        "draft_id": "mock-draft-20260419T150000",
+        "repo_full_name": "arijit/pitch-tipping",
+        "source_mode": "mock",
+        "to_email": ""
+      }
+    }
+  ]
+}

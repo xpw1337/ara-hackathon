@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "workflow": "research_log",
+  "summary": "Logged 11.0 hours for the week of 2026-04-13 with focus on model training, evaluation, backend scaffolding.",
+  "artifacts": [
+    {
+      "type": "markdown",
+      "title": "Research log for 2026-04-13",
+      "content": "# Weekly Research Log\n\n- Week of: 2026-04-13\n- Project: pitch-tipping\n- Coding hours captured: 11.0\n- Main themes: model training, evaluation, backend scaffolding",
+      "metadata": {
+        "week_start": "2026-04-13",
+        "project_name": "pitch-tipping",
+        "total_hours": 11.0,
+        "source_mode": "mock",
+        "commit_refs": [
+          "2f8a4d1",
+          "71d2c08",
+          "91e14bc"
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "data": {},
+  "generated_at": "2026-04-19T15:00:00"
+}

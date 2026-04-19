@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "workflow": "advisor_update",
+  "summary": "Prepared advisor update draft with 3 progress points for the week of 2026-04-13.",
+  "artifacts": [
+    {
+      "type": "email_draft",
+      "title": "Weekly update for pitch-tipping (2026-04-13)",
+      "content": "Hi,\n\nHere is my weekly update for pitch-tipping for the week of 2026-04-13.",
+      "metadata": {
+        "draft_id": "mock-draft-20260419T150000",
+        "repo_full_name": "arijit/pitch-tipping",
+        "source_mode": "mock",
+        "to_email": ""
+      }
+    }
+  ],
+  "errors": [],
+  "data": {},
+  "generated_at": "2026-04-19T15:00:00"
+}
