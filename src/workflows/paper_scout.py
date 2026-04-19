@@ -6,6 +6,7 @@ from src.integrations.reading_list_writer import write_reading_list
 from src.integrations.research_sources import fetch_paper_candidates
 from src.models import PaperCandidate
 from src.state.papers_seen import PapersSeenStore
+from src.state.store import PAPER_SCOUT_RUNS_PATH, append_record, current_timestamp
 
 
 DEFAULT_KEYWORDS = [
@@ -41,13 +42,16 @@ def run_paper_scout(
         ]
 
         if not recommendations:
-            return {
+            result = {
                 "ok": True,
                 "workflow": "paper_scout",
                 "summary": "No new papers found for the configured keywords.",
                 "artifacts": artifacts,
                 "errors": [],
+                "generated_at": current_timestamp(),
             }
+            append_record(PAPER_SCOUT_RUNS_PATH, "runs", result, dedupe_key=None)
+            return result
 
         reading_list_artifact = write_reading_list(
             recommendations,
@@ -58,21 +62,27 @@ def run_paper_scout(
         artifacts.append(reading_list_artifact)
         artifacts.append({"state_path": state_path, "seen_count": len(seen_ids)})
 
-        return {
+        result = {
             "ok": True,
             "workflow": "paper_scout",
             "summary": f"Ranked {len(candidates)} papers and saved {len(recommendations)} new recommendations.",
             "artifacts": artifacts,
             "errors": [],
+            "generated_at": current_timestamp(),
         }
+        append_record(PAPER_SCOUT_RUNS_PATH, "runs", result, dedupe_key=None)
+        return result
     except Exception as exc:
-        return {
+        result = {
             "ok": False,
             "workflow": "paper_scout",
             "summary": "Failed to run paper scout.",
             "artifacts": [],
             "errors": [str(exc)],
+            "generated_at": current_timestamp(),
         }
+        append_record(PAPER_SCOUT_RUNS_PATH, "runs", result, dedupe_key=None)
+        return result
 
 
 def _resolve_keywords(keywords: Iterable[str] | str | None) -> list[str]:
