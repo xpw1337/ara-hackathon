@@ -8,9 +8,14 @@ from typing import Any
 
 import ara_sdk as ara
 
+from src.state.papers_seen import PapersSeenStore
+from src.workflows.paper_scout import DEFAULT_KEYWORDS, run_paper_scout
+
 
 DATA_DIR = Path("data")
 STATE_PATH = DATA_DIR / "state.json"
+PAPER_READING_LIST_PATH = DATA_DIR / "reading_list.md"
+PAPER_SEEN_STATE_PATH = DATA_DIR / "papers_seen.json"
 
 
 @dataclass
@@ -34,6 +39,25 @@ def _ensure_state() -> dict[str, Any]:
 def _save_state(state: dict[str, Any]) -> None:
     DATA_DIR.mkdir(exist_ok=True)
     STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+
+def _paper_scout_status() -> dict[str, Any]:
+    store = PapersSeenStore(str(PAPER_SEEN_STATE_PATH))
+    seen_ids = sorted(store.load_seen_ids())
+    reading_list_exists = PAPER_READING_LIST_PATH.exists()
+    latest_entry = ""
+    if reading_list_exists:
+        content = PAPER_READING_LIST_PATH.read_text(encoding="utf-8").strip()
+        latest_entry = content.splitlines()[-1] if content else ""
+
+    return {
+        "keywords": list(DEFAULT_KEYWORDS),
+        "seen_paper_count": len(seen_ids),
+        "seen_paper_ids": seen_ids[-5:],
+        "reading_list_path": str(PAPER_READING_LIST_PATH),
+        "reading_list_exists": reading_list_exists,
+        "latest_entry_preview": latest_entry,
+    }
 
 
 def _score_task(task: dict[str, Any]) -> int:
@@ -113,6 +137,36 @@ def get_dashboard() -> dict[str, Any]:
         "top_tasks": ranked_tasks[:5],
         "risks": risks,
         "recent_notes": recent_notes,
+        "paper_scout": _paper_scout_status(),
+    }
+
+
+@ara.tool
+def run_paper_scout_tool(
+    keywords: str = "",
+    max_results: int = 12,
+    top_k: int = 3,
+) -> dict[str, Any]:
+    resolved_keywords = keywords.strip() or None
+    result = run_paper_scout(
+        keywords=resolved_keywords,
+        max_results=max_results,
+        top_k=top_k,
+        state_path=str(PAPER_SEEN_STATE_PATH),
+        reading_list_path=str(PAPER_READING_LIST_PATH),
+    )
+    result["status"] = _paper_scout_status()
+    return result
+
+
+@ara.tool
+def get_paper_scout_status() -> dict[str, Any]:
+    return {
+        "ok": True,
+        "workflow": "paper_scout_status",
+        "summary": "Loaded paper scout status.",
+        "artifacts": [_paper_scout_status()],
+        "errors": [],
     }
 
 
@@ -167,12 +221,20 @@ ara.Automation(
     system_instructions=(
         "You are Parallel You, an AI personal computer that behaves like a calm, "
         "proactive chief of staff. Use the available tools to save notes, track tasks, "
-        "and inspect the dashboard before giving advice. When you respond, prioritize: "
-        "1) the single next best action, 2) the main risk if the user does nothing, "
-        "and 3) one concrete draft message or checklist. Be concise, practical, and "
-        "decisive. If connector tools are available, you may suggest actions that could "
-        "be automated later, but do not pretend an external action happened unless a tool "
-        "actually ran."
+        "inspect the dashboard, and run the paper scout workflow before giving advice. "
+        "When you respond, prioritize: 1) the single next best action, 2) the main risk "
+        "if the user does nothing, and 3) one concrete draft message or checklist. Be "
+        "concise, practical, and decisive. If connector tools are available, you may "
+        "suggest actions that could be automated later, but do not pretend an external "
+        "action happened unless a tool actually ran."
     ),
-    tools=[save_note, add_task, complete_task, get_dashboard, seed_demo_context],
+    tools=[
+        save_note,
+        add_task,
+        complete_task,
+        get_dashboard,
+        get_paper_scout_status,
+        run_paper_scout_tool,
+        seed_demo_context,
+    ],
 )

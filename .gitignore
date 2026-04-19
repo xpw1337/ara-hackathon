@@ -9,4 +9,5 @@ __pycache__/
 .DS_Store
 .env
 data/*.json
+data/reading_list.md
 !.gitkeep
