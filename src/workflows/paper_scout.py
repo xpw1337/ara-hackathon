@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Iterable
 
 from src.integrations.reading_list_writer import write_reading_list
@@ -23,16 +24,19 @@ def run_paper_scout(
     state_path: str = "data/papers_seen.json",
     reading_list_path: str = "data/reading_list.md",
     reading_list_target: str | None = None,
+    runs_path: str | Path = PAPER_SCOUT_RUNS_PATH,
 ) -> dict:
     try:
         resolved_keywords = _resolve_keywords(keywords)
         candidates = fetch_paper_candidates(resolved_keywords, max_results=max_results)
 
         seen_store = PapersSeenStore(state_path)
+        seen_before = seen_store.load_seen_ids()
         unseen_candidates = [
             candidate for candidate in candidates if not seen_store.has_seen(candidate.paper_id)
         ]
         recommendations = unseen_candidates[:top_k]
+        generated_at = current_timestamp()
 
         artifacts = [
             {
@@ -40,6 +44,12 @@ def run_paper_scout(
                 "recommendations": [_serialize_paper(candidate) for candidate in recommendations],
             }
         ]
+        data = {
+            "keywords": resolved_keywords,
+            "candidate_count": len(candidates),
+            "recommendation_count": len(recommendations),
+            "seen_count": len(seen_before),
+        }
 
         if not recommendations:
             result = {
@@ -48,9 +58,10 @@ def run_paper_scout(
                 "summary": "No new papers found for the configured keywords.",
                 "artifacts": artifacts,
                 "errors": [],
-                "generated_at": current_timestamp(),
+                "data": data,
+                "generated_at": generated_at,
             }
-            append_record(PAPER_SCOUT_RUNS_PATH, "runs", result, dedupe_key=None)
+            append_record(Path(runs_path), "runs", result, dedupe_key=None)
             return result
 
         reading_list_artifact = write_reading_list(
@@ -61,6 +72,7 @@ def run_paper_scout(
         seen_ids = seen_store.mark_seen(candidate.paper_id for candidate in recommendations)
         artifacts.append(reading_list_artifact)
         artifacts.append({"state_path": state_path, "seen_count": len(seen_ids)})
+        data["seen_count"] = len(seen_ids)
 
         result = {
             "ok": True,
@@ -68,9 +80,10 @@ def run_paper_scout(
             "summary": f"Ranked {len(candidates)} papers and saved {len(recommendations)} new recommendations.",
             "artifacts": artifacts,
             "errors": [],
-            "generated_at": current_timestamp(),
+            "data": data,
+            "generated_at": generated_at,
         }
-        append_record(PAPER_SCOUT_RUNS_PATH, "runs", result, dedupe_key=None)
+        append_record(Path(runs_path), "runs", result, dedupe_key=None)
         return result
     except Exception as exc:
         result = {
@@ -79,9 +92,15 @@ def run_paper_scout(
             "summary": "Failed to run paper scout.",
             "artifacts": [],
             "errors": [str(exc)],
+            "data": {
+                "keywords": _resolve_keywords(keywords),
+                "candidate_count": 0,
+                "recommendation_count": 0,
+                "seen_count": 0,
+            },
             "generated_at": current_timestamp(),
         }
-        append_record(PAPER_SCOUT_RUNS_PATH, "runs", result, dedupe_key=None)
+        append_record(Path(runs_path), "runs", result, dedupe_key=None)
         return result
 
 
